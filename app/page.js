@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import Navbar from "@/app/components/navbar";
+import Navbar from "@/app/components/Navbar";
 
 /*
   Font: add to layout.tsx / _document.tsx
@@ -874,133 +874,7 @@ const PREMIUM_FEATURES = [
   "Early access to features",
 ];
 
-function PricingSection() {
-  return (
-    <section className="py-28 px-4 sm:px-6 lg:px-8 bg-stone-900">
-      <div className="max-w-5xl mx-auto">
-        <FadeIn className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-[0.18em] uppercase text-stone-600 mb-3">
-            Pricing
-          </p>
-          <h2
-            className="text-3xl font-bold text-stone-100 tracking-tight"
-            style={{ fontFamily: "'Lora', serif" }}
-          >
-            Start free, upgrade when ready
-          </h2>
-        </FadeIn>
 
-        <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-          {/* Free */}
-          <FadeIn delay={0.08}>
-            <div className="rounded-xl p-7 h-full bg-stone-800/50 border border-stone-700/50">
-              <p className="text-[10.5px] font-semibold tracking-widest text-stone-500 uppercase mb-1">
-                Free
-              </p>
-              <p
-                className="text-4xl font-bold text-stone-100 mb-0.5"
-                style={{ fontFamily: "'Lora', serif" }}
-              >
-                ₹0
-              </p>
-              <p className="text-xs text-stone-600 mb-7">Forever free</p>
-              <div className="flex flex-col gap-2.5 mb-7">
-                {FREE_FEATURES.map((f) => (
-                  <div key={f} className="flex items-start gap-2.5">
-                    <div className="w-4 h-4 rounded-full bg-stone-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icons.Check size={9} color="#6b7280" />
-                    </div>
-                    <span className="text-[12px] text-stone-500">{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full rounded-lg py-2.5 text-sm font-medium text-stone-400 border border-stone-700 hover:bg-stone-700/40 transition-colors">
-                Get started free
-              </button>
-            </div>
-          </FadeIn>
-
-          {/* Premium */}
-          <FadeIn delay={0.15}>
-            <div className="rounded-xl p-7 h-full bg-white relative overflow-hidden">
-              {/* Recommended pill */}
-              <div className="absolute -top-px left-1/2 -translate-x-1/2">
-                <div className="rounded-b-full px-4 py-1.5 text-[9.5px] font-bold tracking-wider uppercase text-white bg-emerald-800">
-                  Recommended
-                </div>
-              </div>
-
-              <div className="mt-4">
-                {/* AI badge — clean, dark, refined */}
-                <div className="flex items-center gap-1.5 mb-4">
-                  <div className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 bg-stone-900 border border-stone-800">
-                    <Icons.Sparkles size={10} color="#9ca3af" />
-                    <span className="text-[9.5px] font-semibold tracking-widest text-stone-400 uppercase">
-                      AI Powered
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-[10.5px] font-semibold tracking-widest text-emerald-700 uppercase mb-1">
-                  Premium
-                </p>
-                <div className="flex items-baseline gap-1 mb-0.5">
-                  <p
-                    className="text-4xl font-bold text-stone-900"
-                    style={{ fontFamily: "'Lora', serif" }}
-                  >
-                    ₹79
-                  </p>
-                  <span className="text-xs text-stone-400">/month</span>
-                </div>
-                <p className="text-xs text-stone-400 mb-7">
-                  Billed monthly · cancel anytime
-                </p>
-
-                <div className="flex flex-col gap-2.5 mb-7">
-                  {PREMIUM_FEATURES.map((f) => (
-                    <div key={f} className="flex items-start gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Icons.Check size={9} color="#065f46" />
-                      </div>
-                      <span className="text-[12px] text-stone-600">{f}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold text-white bg-emerald-800 hover:bg-emerald-900 transition-colors shadow-sm">
-                  <Icons.Zap size={13} color="#fff" />
-                  Upgrade to Premium
-                </button>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-
-        {/* AI feature callout — dark, minimal */}
-        <FadeIn delay={0.22}>
-          <div className="mt-6 max-w-3xl mx-auto rounded-xl p-5 border border-stone-800 bg-stone-800/30">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center">
-                <Icons.Sparkles size={16} color="#6b7280" />
-              </div>
-              <div>
-                <h4 className="text-[12.5px] font-semibold text-stone-300 mb-1">
-                  What does AI Mock Paper do?
-                </h4>
-                <p className="text-[12px] text-stone-500 leading-relaxed max-w-xl">
-                  Our model analyses 10+ years of real question papers for your
-                  subject and generates a unique practice paper — matching real
-                  exam difficulty, section weightage, and topic distribution.
-                </p>
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-      </div>
-    </section>
-  );
-}
 
 // ─── Testimonials ─────────────────────────────────────────────────────────────
 const TESTIMONIALS = [
@@ -1151,7 +1025,7 @@ export default function VaultLandingPage() {
       <FeaturesSection />
       <HowItWorksSection />
       <ReferralBanner />
-      <PricingSection />
+     
       <TestimonialsSection />
       <FinalCTA />
       <Footer />
