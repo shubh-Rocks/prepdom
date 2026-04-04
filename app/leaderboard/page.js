@@ -1,6 +1,8 @@
 import { getContributorLeaderboard } from "@/app/actions/wallet/coin";
 import LeaderboardPanel from "@/app/components/leaderboard-panel";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Leaderboard | Vault",
   description: "See the top contributors and uploaders in the Vault community.",

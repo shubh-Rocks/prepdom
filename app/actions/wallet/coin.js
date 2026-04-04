@@ -6,7 +6,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import CoinTransaction from "@/lib/models/CoinTransaction";
 import Unlock from "@/lib/models/Unlock";
-import "@/lib/models/Paper";
+import Paper from "@/lib/models/Paper";
+
+const CONTRIBUTOR_SCORING_META = "10 points per upload, 2 per unlock, 1 per save";
 
 const VALID_TRANSACTION_REASONS = new Set([
   "unlock",
@@ -263,5 +265,98 @@ export async function purchaseCoins(pack) {
   } catch (error) {
     console.error("Error processing coin purchase:", error);
     throw new Error("Failed to process purchase");
+  }
+}
+
+// Public leaderboard: published papers + engagement counters on Paper (no auth required)
+export async function getContributorLeaderboard(limit = 20) {
+  try {
+    await connectToDatabase();
+
+    const session = await getServerSession(authOptions);
+    let currentUserId = null;
+    if (session?.user?.email) {
+      const me = await User.findOne({ email: session.user.email }).select("_id").lean();
+      currentUserId = me?._id?.toString() ?? null;
+    }
+
+    const rows = await Paper.aggregate([
+      { $match: { status: "published" } },
+      {
+        $group: {
+          _id: "$uploader",
+          uploadsCount: { $sum: 1 },
+          totalUnlocks: { $sum: { $ifNull: ["$unlockCount", 0] } },
+          totalSaves: { $sum: { $ifNull: ["$saveCount", 0] } },
+          firstPublishedAt: { $min: "$createdAt" },
+        },
+      },
+      { $match: { uploadsCount: { $gt: 0 } } },
+      {
+        $addFields: {
+          contributorScore: {
+            $add: [
+              { $multiply: [10, "$uploadsCount"] },
+              { $multiply: [2, "$totalUnlocks"] },
+              { $multiply: [1, "$totalSaves"] },
+            ],
+          },
+        },
+      },
+      {
+        $sort: {
+          contributorScore: -1,
+          uploadsCount: -1,
+          firstPublishedAt: 1,
+        },
+      },
+    ]);
+
+    const userIds = rows.map((r) => r._id);
+    const users = await User.find({ _id: { $in: userIds } })
+      .select("name email avatarUrl")
+      .lean();
+    const byId = new Map(users.map((u) => [u._id.toString(), u]));
+
+    const leaderboardFull = [];
+    let rank = 1;
+    for (const row of rows) {
+      const u = byId.get(row._id.toString());
+      if (!u) continue;
+
+      const userId = row._id.toString();
+      leaderboardFull.push({
+        userId,
+        rank,
+        name: u.name || "Contributor",
+        email: u.email || "",
+        avatarUrl: u.avatarUrl || null,
+        uploadsCount: row.uploadsCount,
+        totalUnlocks: row.totalUnlocks,
+        totalSaves: row.totalSaves,
+        contributorScore: row.contributorScore,
+        isCurrentUser: currentUserId === userId,
+      });
+      rank += 1;
+    }
+
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 20, 100));
+    const leaderboard = leaderboardFull.slice(0, safeLimit);
+
+    const currentUserEntry = currentUserId
+      ? leaderboardFull.find((e) => e.userId === currentUserId)
+      : null;
+
+    return {
+      leaderboard,
+      meta: {
+        totalContributors: leaderboardFull.length,
+        scoring: CONTRIBUTOR_SCORING_META,
+      },
+      currentUserEntry: currentUserEntry ? { rank: currentUserEntry.rank } : null,
+    };
+  } catch (error) {
+    console.error("Error loading contributor leaderboard:", error);
+    throw new Error("Failed to load leaderboard");
   }
 }
