@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import Navbar from "@/app/components/Navbar";
+
 
 /*
   Font: add to layout.tsx / _document.tsx
@@ -1020,7 +1020,6 @@ export default function VaultLandingPage() {
         color: "#1c1917",
       }}
     >
-      <Navbar coins={124} />
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
