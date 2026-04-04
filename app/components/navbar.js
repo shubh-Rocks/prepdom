@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Plus,
   Upload,
   UserRound,
   Wallet,
@@ -18,9 +19,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAIN_LINKS = [
   { label: "Upload", href: "/user/uploads", matchPath: "/user/uploads" },
-  { label: "Library", href: "/#library", hash: "#library" },
-  { label: "Leaderboard", href: "/#leaderboard", hash: "#leaderboard" },
-  { label: "Premium", href: "/#premium", hash: "#premium" },
+  { label: "Library", href: "/user/library", matchPath: "/user/library" },
+  { label: "Leaderboard", href: "/user/leaderboard", matchPath: "/user/leaderboard" },
+  { label: "Premium", href: "/premium/plan", hash: "#premium" },
 ];
 
 const ACCOUNT_LINKS = [
@@ -51,6 +52,7 @@ export default function Navbar({ coins = 0 }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentHash, setCurrentHash] = useState("");
+  const [liveCoins, setLiveCoins] = useState(coins);
 
   const mobileShellRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -60,7 +62,7 @@ export default function Navbar({ coins = 0 }) {
   const displayEmail = session?.user?.email || "";
   const displayCoins = Number(
     isAuthenticated
-      ? (typeof coins === "number" ? coins : session?.user?.coins ?? 0)
+      ? (typeof liveCoins === "number" ? liveCoins : session?.user?.coins ?? 0)
       : (coins ?? 0)
   );
 
@@ -88,6 +90,44 @@ export default function Navbar({ coins = 0 }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLiveCoins(typeof coins === "number" ? coins : 0);
+      return;
+    }
+
+    let active = true;
+
+    async function loadNavbarData() {
+      try {
+        const response = await fetch("/api/user/navbar", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        const nextCoins = data?.data?.coins;
+
+        if (active && typeof nextCoins === "number") {
+          setLiveCoins(nextCoins);
+        }
+      } catch (error) {
+        console.error("Failed to load live navbar coins:", error);
+      }
+    }
+
+    loadNavbarData();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, coins]);
 
   useEffect(() => {
     const onResize = () => {
@@ -249,7 +289,8 @@ export default function Navbar({ coins = 0 }) {
             {/* ── Right — Coin + CTAs ── */}
             <div className="flex items-center gap-2" ref={mobileShellRef}>
               {/* Coin pill — visible sm+ */}
-              <div
+              <Link
+                href="/user/wallet"
                 className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5 py-1 cursor-pointer transition-all duration-150"
                 style={{
                   background: "rgba(255,255,255,0.8)",
@@ -285,7 +326,17 @@ export default function Navbar({ coins = 0 }) {
                 >
                   {displayCoins.toLocaleString()}
                 </span>
-              </div>
+                <span
+                  className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full"
+                  style={{
+                    background: "rgba(37,103,30,0.12)",
+                    color: "#25671E",
+                  }}
+                  aria-hidden="true"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2.6} />
+                </span>
+              </Link>
 
               {status === "loading" ? (
                 <div

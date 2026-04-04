@@ -1,14 +1,112 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FileBadge, Sparkles } from "lucide-react";
+import { Sparkles, Wand2 } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import Paper from "@/lib/models/Paper";
 import {
   canAccessMockPaper,
   hasAllPapersFreeAccess,
   resolvePlanTierFromUser,
 } from "@/lib/premium/plans";
+import MockPaperGeneratorClient from "./mock-paper-generator-client";
+import { APPROVED_PAPER_STATUS } from "@/lib/library/config";
+
+export const dynamic = "force-dynamic";
+
+function toSortedStringList(values) {
+  return Array.from(new Set(values.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean))).sort(
+    (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })
+  );
+}
+
+function buildNestedSourceOptions(papers) {
+  const tree = new Map();
+
+  for (const paper of papers) {
+    const institute = paper.institute?.trim();
+    const specialization = paper.specialization?.trim();
+    const subject = paper.subject?.trim();
+    const sem = Number(paper.sem);
+    const title = paper.title?.trim();
+    const year = Number(paper.year);
+
+    if (!institute || !specialization || !subject || !title) {
+      continue;
+    }
+
+    if (!Number.isInteger(sem) || !Number.isInteger(year)) {
+      continue;
+    }
+
+    if (!tree.has(institute)) {
+      tree.set(institute, new Map());
+    }
+
+    const specializationMap = tree.get(institute);
+    if (!specializationMap.has(specialization)) {
+      specializationMap.set(specialization, new Map());
+    }
+
+    const subjectMap = specializationMap.get(specialization);
+    if (!subjectMap.has(subject)) {
+      subjectMap.set(subject, new Map());
+    }
+
+    const semesterMap = subjectMap.get(subject);
+    if (!semesterMap.has(String(sem))) {
+      semesterMap.set(String(sem), []);
+    }
+
+    semesterMap.get(String(sem)).push({
+      id: String(paper._id),
+      title,
+      year,
+      sem,
+      subject,
+      institute,
+      specialization,
+    });
+  }
+
+  return toSortedStringList(Array.from(tree.keys())).map((institute) => {
+    const specializationMap = tree.get(institute);
+    const specializations = toSortedStringList(Array.from(specializationMap.keys())).map((specialization) => {
+      const subjectMap = specializationMap.get(specialization);
+      const subjects = toSortedStringList(Array.from(subjectMap.keys())).map((subject) => {
+        const semesterMap = subjectMap.get(subject);
+        const semesters = Array.from(semesterMap.keys())
+          .map((semValue) => ({
+            value: semValue,
+            sourcePapers: [...semesterMap.get(semValue)].sort((a, b) => {
+              if (b.year !== a.year) {
+                return b.year - a.year;
+              }
+
+              return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+            }),
+          }))
+          .sort((a, b) => Number(a.value) - Number(b.value));
+
+        return {
+          value: subject,
+          semesters,
+        };
+      });
+
+      return {
+        value: specialization,
+        subjects,
+      };
+    });
+
+    return {
+      value: institute,
+      specializations,
+    };
+  });
+}
 
 export default async function MockPaperPage() {
   const session = await getAuthSession();
@@ -19,49 +117,108 @@ export default async function MockPaperPage() {
 
   await connectToDatabase();
   const user = await User.findById(session.user.id).select("isPremium planTier").lean();
+  const eligibleSourcePapers = await Paper.find({
+    status: APPROVED_PAPER_STATUS,
+    hasExtraction: true,
+    extractionStatus: "completed",
+  })
+    .select("title subject institute specialization sem year")
+    .sort({ institute: 1, specialization: 1, subject: 1, sem: 1, year: -1, title: 1 })
+    .lean();
   const planTier = resolvePlanTierFromUser(user || session.user);
 
   if (!canAccessMockPaper(planTier)) {
     redirect("/premium/plan");
   }
 
+  const sourceOptions = buildNestedSourceOptions(eligibleSourcePapers);
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(160deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)] px-5 py-10 sm:px-8">
-      <main className="mx-auto w-full max-w-4xl rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-[0_22px_80px_-28px_rgba(15,23,42,0.28)] sm:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Premium Mock Papers</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Mock paper generator</h1>
-        <p className="mt-2 text-sm text-zinc-600">
-          You are now on the premium mock-paper route. The generator workflow can be connected here next.
-        </p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_12%_18%,rgba(22,163,74,0.14),transparent_36%),radial-gradient(circle_at_84%_14%,rgba(14,165,233,0.14),transparent_30%),linear-gradient(155deg,#f5f7eb_0%,#edfdf7_40%,#eef7ff_100%)] px-5 py-10 sm:px-8">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <section className="overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-white/85 p-6 shadow-[0_24px_90px_-34px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700/75">
+                Premium Mock Papers
+              </p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
+                Generate a fresh exam from last year&apos;s pattern
+              </h1>
+              <p className="mt-3 text-sm font-medium leading-6 text-zinc-600 sm:text-base">
+                Fill the academic profile, let Gemini study the approved previous-year paper, and get a
+                polished mock paper with section flow, marks logic, and revision-friendly insights.
+              </p>
+            </div>
 
-        <section className="mt-6 grid gap-4 sm:grid-cols-2">
-          <article className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <FileBadge className="h-5 w-5 text-zinc-700" />
-            <p className="mt-3 text-sm font-semibold text-zinc-900">Generate a custom paper</p>
-            <p className="text-xs text-zinc-500">Create exam-like question sets from your preferred topics.</p>
-          </article>
+            <div className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50/90 px-5 py-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Generation flow</p>
+              <div className="mt-2 flex items-center gap-3 text-sm font-semibold text-emerald-900">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                Source paper match -&gt; Gemini -&gt; interactive exam UI
+              </div>
+            </div>
+          </div>
 
-          <article className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <Sparkles className="h-5 w-5 text-zinc-700" />
-            <p className="mt-3 text-sm font-semibold text-zinc-900">AI-based patterning</p>
-            <p className="text-xs text-zinc-500">Use AI pattern analysis to mimic recent paper weightage and structure.</p>
-          </article>
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1.45fr_0.95fr]">
+            <div className="rounded-[1.75rem] border border-zinc-200 bg-zinc-50/90 p-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <article className="rounded-2xl border border-white/80 bg-white p-4 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">1</p>
+                  <p className="mt-2 text-sm font-semibold text-zinc-900">Match previous year</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    We automatically locate the best approved paper from the previous year.
+                  </p>
+                </article>
+                <article className="rounded-2xl border border-white/80 bg-white p-4 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">2</p>
+                  <p className="mt-2 text-sm font-semibold text-zinc-900">Generate fresh questions</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    Gemini keeps the structure and mark balance while creating new content.
+                  </p>
+                </article>
+                <article className="rounded-2xl border border-white/80 bg-white p-4 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">3</p>
+                  <p className="mt-2 text-sm font-semibold text-zinc-900">Study interactively</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    Review sections, coverage notes, and question metadata in one result page.
+                  </p>
+                </article>
+              </div>
+            </div>
+
+            <aside className="rounded-[1.75rem] border border-zinc-200 bg-zinc-950 p-5 text-white shadow-[0_18px_60px_-30px_rgba(15,23,42,0.65)]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                <Wand2 className="h-3.5 w-3.5" />
+                Pattern-aware generation
+              </div>
+              <p className="mt-4 text-lg font-bold">Best for full-length practice before exams.</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-300">
+                Use the same metadata profile as your real paper, then iterate with regenerate and print
+                actions once you land on a version you like.
+              </p>
+
+              {hasAllPapersFreeAccess(planTier) ? (
+                <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200">
+                  Premium Plus detected: your account already has the highest premium access tier.
+                </div>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-zinc-200">
+                <Link href="/premium/plan" className="underline decoration-white/20 underline-offset-4">
+                  Manage Plan
+                </Link>
+                <Link href="/user/dashboard" className="underline decoration-white/20 underline-offset-4">
+                  Back to Dashboard
+                </Link>
+              </div>
+            </aside>
+          </div>
         </section>
 
-        {hasAllPapersFreeAccess(planTier) && (
-          <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
-            Premium Plus detected: all papers are free to access for your account.
-          </section>
-        )}
-
-        <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold text-zinc-700">
-          <Link href="/premium/plan" className="underline decoration-zinc-300 underline-offset-4">
-            Manage Plan
-          </Link>
-          <Link href="/user/dashboard" className="underline decoration-zinc-300 underline-offset-4">
-            Go to Dashboard
-          </Link>
-        </div>
+        <MockPaperGeneratorClient sourceOptions={sourceOptions} />
       </main>
     </div>
   );

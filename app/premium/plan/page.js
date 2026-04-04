@@ -13,6 +13,8 @@ import {
   resolvePlanTierFromUser,
 } from "@/lib/premium/plans";
 
+export const dynamic = "force-dynamic";
+
 const STATUS_MESSAGES = {
   updated: {
     tone: "success",

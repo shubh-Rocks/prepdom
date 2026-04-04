@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { BookMarked, BookmarkCheck, Search } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function SavesPage() {
   const session = await getAuthSession();
 

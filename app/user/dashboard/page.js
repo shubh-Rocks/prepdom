@@ -29,6 +29,8 @@ import {
   resolvePlanTierFromUser,
 } from "@/lib/premium/plans";
 
+export const dynamic = "force-dynamic";
+
 const REFERRAL_STATUS = {
   success: {
     tone: "success",

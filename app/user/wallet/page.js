@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth/options";
 import { getWalletOverview } from "@/app/actions/wallet/coin";
 import WalletClient from "./WalletClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function WalletPage() {
   const session = await getServerSession(authOptions);
 

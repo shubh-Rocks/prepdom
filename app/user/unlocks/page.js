@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Coins, Lock, ShieldCheck } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function UnlocksPage() {
   const session = await getAuthSession();
 

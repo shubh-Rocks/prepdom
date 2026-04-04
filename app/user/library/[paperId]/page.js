@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import PaperReaderClient from "./paper-reader-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function PaperReaderPage({ params }) {
   const session = await getAuthSession();
 

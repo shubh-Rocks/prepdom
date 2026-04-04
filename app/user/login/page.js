@@ -3,6 +3,8 @@ import { BadgeCheck, BookOpenText, Sparkles } from "lucide-react";
 import GoogleSignInButton from "@/app/components/auth/google-signin-button";
 import { getAuthSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 const highlights = [
   "Google OAuth only, no password fatigue",
   "Paper extraction sync on first sign-in",
