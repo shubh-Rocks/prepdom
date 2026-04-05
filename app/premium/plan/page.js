@@ -16,7 +16,6 @@ const plans = [
     ],
     cta: "Use Vault for Free",
     popular: false,
-    icon: "🔓",
   },
   {
     name: "PRO",
@@ -32,7 +31,6 @@ const plans = [
     ],
     cta: "Get Pro Plan",
     popular: true,
-    icon: "⚡",
   },
   {
     name: "MAX",
@@ -49,7 +47,6 @@ const plans = [
     ],
     cta: "Get Max Plan",
     popular: false,
-    icon: "🚀",
   },
 ];
 
@@ -129,7 +126,7 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#f0fdf4] font-['DM_Sans',sans-serif] px-5 py-16 flex flex-col items-center justify-center">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#f0fdf4] font-['DM_Sans',sans-serif] px-5 py-10 flex flex-col items-center justify-center">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       {/* Header Section */}
       <div className="relative z-10 flex flex-col items-center mb-14 text-center">
@@ -150,7 +147,7 @@ export default function SubscriptionPage() {
       </div>
 
       {/* Toggle */}
-      <div className="relative z-10 flex items-center gap-1 p-1.5 bg-white/70 backdrop-blur-md border border-green-300/60 rounded-full shadow-lg shadow-green-500/10 mb-14">
+      <div className="relative z-10 flex items-center gap-1 p-1 bg-white/70 backdrop-blur-md border border-green-300/60 rounded-full shadow-lg shadow-green-500/10 mb-10">
         <button
           onClick={() => setBilling("monthly")}
           className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -164,7 +161,7 @@ export default function SubscriptionPage() {
       </div>
 
       {/* Cards Grid */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full h-2/5 max-w-5xl items-stretch">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full h-1/2 max-w-5xl items-stretch">
         {plans.map((plan) => (
           <div
             key={plan.name}
@@ -188,12 +185,6 @@ export default function SubscriptionPage() {
               </span>
             )}
 
-            <div
-              className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 
-              ${plan.color === "pro" ? "bg-white/45" : "bg-green-400/20"}`}
-            >
-              {plan.icon}
-            </div>
 
             <h3
               className={`font-['Playfair_Display',serif] font-bold text-sm tracking-[3px] uppercase mb-1.5

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import {
   Bookmark,
   ChevronDown,
@@ -19,14 +20,14 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const BASE_MAIN_LINKS = [
+  { label: "My Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
   { label: "Upload", href: "/user/uploads", matchPath: "/user/uploads" },
   { label: "Library", href: "/user/library", matchPath: "/user/library" },
-  { label: "Leaderboard", href: "/#leaderboard", hash: "#leaderboard" },
-  { label: "Premium", href: "/#premium", hash: "#premium" },
+  { label: "Leaderboard", href: "/leaderboard", hash: "#leaderboard" },
+  { label: "Premium", href: "/premium/plan", hash: "#premium" },
 ];
 
 const BASE_ACCOUNT_LINKS = [
-  { label: "My Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
   { label: "My Wallet", href: "/user/wallet", icon: Wallet },
   { label: "My Profile", href: "/user/profile", icon: UserRound },
   { label: "My Uploads", href: "/user/uploads", icon: Upload },
@@ -35,10 +36,7 @@ const BASE_ACCOUNT_LINKS = [
 ];
 
 function getInitials(name) {
-  if (!name) {
-    return "U";
-  }
-
+  if (!name) return "U";
   const [first = "", second = ""] = name.trim().split(/\s+/);
   return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase() || "U";
 }
@@ -49,11 +47,13 @@ export default function Navbar({ coins = 0 }) {
   const searchParams = useSearchParams();
 
   const [scrolled, setScrolled] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentHash, setCurrentHash] = useState("");
 
+  const lastScrollY = useRef(0);
   const mobileShellRef = useRef(null);
   const userMenuRef = useRef(null);
 
@@ -68,10 +68,7 @@ export default function Navbar({ coins = 0 }) {
   const isAdmin = session?.user?.role === "admin";
 
   const mainLinks = useMemo(() => {
-    if (!isAdmin) {
-      return BASE_MAIN_LINKS;
-    }
-
+    if (!isAdmin) return BASE_MAIN_LINKS;
     return [
       ...BASE_MAIN_LINKS,
       { label: "Admin", href: "/admin/papers", matchPath: "/admin/papers" },
@@ -79,10 +76,7 @@ export default function Navbar({ coins = 0 }) {
   }, [isAdmin]);
 
   const accountLinks = useMemo(() => {
-    if (!isAdmin) {
-      return BASE_ACCOUNT_LINKS;
-    }
-
+    if (!isAdmin) return BASE_ACCOUNT_LINKS;
     return [
       { label: "Admin Papers", href: "/admin/papers", icon: ShieldCheck },
       ...BASE_ACCOUNT_LINKS,
@@ -111,18 +105,31 @@ export default function Navbar({ coins = 0 }) {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const diff = currentY - lastScrollY.current;
+
+      if (diff < -5 || currentY < 60) {
+        setNavVisible(true);
+      } else if (diff > 5 && currentY > 60) {
+        setNavVisible(false);
+        // Close menus when navbar hides
+        setUserMenuOpen(false);
+        setMobileOpen(false);
+      }
+
+      setScrolled(currentY > 20);
+      lastScrollY.current = currentY;
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileOpen(false);
-      }
+      if (window.innerWidth >= 768) setMobileOpen(false);
     };
-
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -130,7 +137,6 @@ export default function Navbar({ coins = 0 }) {
   useEffect(() => {
     function handleOutsideClick(event) {
       const target = event.target;
-
       if (
         mobileOpen &&
         mobileShellRef.current &&
@@ -138,7 +144,6 @@ export default function Navbar({ coins = 0 }) {
       ) {
         setMobileOpen(false);
       }
-
       if (
         userMenuOpen &&
         userMenuRef.current &&
@@ -157,7 +162,6 @@ export default function Navbar({ coins = 0 }) {
 
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
@@ -165,26 +169,15 @@ export default function Navbar({ coins = 0 }) {
   }, [mobileOpen, userMenuOpen]);
 
   const isMainLinkActive = (link) => {
-    if (link.matchPath) {
-      return pathname?.startsWith(link.matchPath);
-    }
-
-    if (pathname !== "/") {
-      return false;
-    }
-
-    if (link.hash === "#hero") {
+    if (link.matchPath) return pathname?.startsWith(link.matchPath);
+    if (pathname !== "/") return false;
+    if (link.hash === "#hero")
       return currentHash === "" || currentHash === "#hero";
-    }
-
     return currentHash === link.hash;
   };
 
   async function handleSignOut() {
-    if (loggingOut) {
-      return;
-    }
-
+    if (loggingOut) return;
     setLoggingOut(true);
     await signOut({ callbackUrl: "/" });
   }
@@ -193,8 +186,11 @@ export default function Navbar({ coins = 0 }) {
     <motion.header
       className="fixed inset-x-0 top-0 z-50"
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      animate={{
+        opacity: 1,
+        y: navVisible ? 0 : -100,
+      }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="px-4 sm:px-6 lg:px-8">
         <div
@@ -215,12 +211,13 @@ export default function Navbar({ coins = 0 }) {
               href="/#hero"
               className="group flex items-center gap-2.5 no-underline"
             >
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-xl shadow-sm transition-transform duration-200 group-hover:rotate-[-5deg] group-hover:scale-105"
-                style={{ background: "#25671E" }}
-              >
-                <span className="text-base">🔐</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Word Vault Logo"
+                width={50}
+                height={50}
+              />
+
               <span
                 className="text-[15px] font-bold tracking-widest"
                 style={{ color: "#25671E" }}
@@ -315,7 +312,6 @@ export default function Navbar({ coins = 0 }) {
                   >
                     Sign In
                   </Link>
-
                   <Link
                     href={loginHref}
                     className="hidden rounded-full px-4 py-1.75 text-[13px] font-semibold text-white no-underline transition-all duration-200 hover:-translate-y-0.5 active:scale-95 md:inline-flex"
