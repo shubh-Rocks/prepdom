@@ -9,10 +9,12 @@ import {
   CheckCircle2,
   ChevronRight,
   Clipboard,
+  GraduationCap,
   Loader2,
   Printer,
   RefreshCcw,
   Sparkles,
+  Target,
 } from "lucide-react";
 
 function formatDistributionEntries(distribution) {
@@ -56,6 +58,7 @@ function QuestionChip({ children }) {
 export default function MockPaperResultClient({ generationId }) {
   const router = useRouter();
   const [feedback, setFeedback] = useState("");
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
 
   const resolvedPaper = useMemo(() => {
     if (typeof window === "undefined") {
@@ -125,10 +128,22 @@ export default function MockPaperResultClient({ generationId }) {
     router.push("/premium/mock-paper");
   }
 
+  function openAssessmentModal() {
+    setShowAssessmentModal(true);
+  }
+
+  function closeAssessmentModal() {
+    setShowAssessmentModal(false);
+  }
+
+  function continueToAssessment() {
+    router.push(`/premium/mock-paper/test?id=${encodeURIComponent(generationId)}`);
+  }
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_14%_18%,rgba(22,163,74,0.1),transparent_34%),linear-gradient(160deg,#f7fbf8_0%,#eef8ff_100%)] px-5 py-10 sm:px-8">
-        <main className="mx-auto flex min-h-[60vh] w-full max-w-5xl items-center justify-center rounded-[2rem] border border-zinc-200 bg-white/85 p-8 shadow-[0_24px_80px_-34px_rgba(15,23,42,0.34)]">
+        <main className="mx-auto flex min-h-[60vh] w-full max-w-5xl items-center justify-center rounded-4xl border border-zinc-200 bg-white/85 p-8 shadow-[0_24px_80px_-34px_rgba(15,23,42,0.34)]">
           <div className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-700">
             <Loader2 className="h-4 w-4 animate-spin" />
             Opening generated mock paper...
@@ -141,7 +156,7 @@ export default function MockPaperResultClient({ generationId }) {
   if (status === "missing" || !paper) {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_14%_18%,rgba(22,163,74,0.1),transparent_34%),linear-gradient(160deg,#f7fbf8_0%,#eef8ff_100%)] px-5 py-10 sm:px-8">
-        <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-[2rem] border border-zinc-200 bg-white/85 p-8 text-center shadow-[0_24px_80px_-34px_rgba(15,23,42,0.34)]">
+        <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-4xl border border-zinc-200 bg-white/85 p-8 text-center shadow-[0_24px_80px_-34px_rgba(15,23,42,0.34)]">
           <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
             <AlertCircle className="h-6 w-6" />
           </div>
@@ -176,7 +191,7 @@ export default function MockPaperResultClient({ generationId }) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_12%_14%,rgba(22,163,74,0.1),transparent_32%),radial-gradient(circle_at_88%_8%,rgba(14,165,233,0.12),transparent_28%),linear-gradient(160deg,#f6fbf7_0%,#f7fafc_44%,#edf6ff_100%)] px-4 py-8 sm:px-8 print:bg-white print:px-0 print:py-0">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 print:max-w-none">
-        <header className="overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-white/90 p-6 shadow-[0_24px_90px_-34px_rgba(15,23,42,0.34)] backdrop-blur-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
+        <header className="overflow-hidden rounded-4xl border border-zinc-200/80 bg-white/90 p-6 shadow-[0_24px_90px_-34px_rgba(15,23,42,0.34)] backdrop-blur-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-4xl">
               <div className="flex flex-wrap items-center gap-3">
@@ -249,7 +264,7 @@ export default function MockPaperResultClient({ generationId }) {
 
         <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr] print:grid-cols-1">
           <aside className="space-y-5 print:hidden">
-            <div className="rounded-[2rem] border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
+            <div className="rounded-4xl border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">Quick jump</p>
               <div className="mt-4 space-y-2">
                 {(paper.sections || []).map((section) => (
@@ -265,7 +280,7 @@ export default function MockPaperResultClient({ generationId }) {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
+            <div className="rounded-4xl border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">Generation notes</p>
               <details className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3" open>
                 <summary className="cursor-pointer text-sm font-bold text-zinc-900">Pattern notes</summary>
@@ -289,7 +304,7 @@ export default function MockPaperResultClient({ generationId }) {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
+            <div className="rounded-4xl border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)]">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">Paper summary</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
@@ -327,10 +342,36 @@ export default function MockPaperResultClient({ generationId }) {
                 </div>
               ) : null}
             </div>
+
+            <div className="rounded-4xl border border-emerald-200 bg-[linear-gradient(130deg,#f0fdf4_0%,#ecfeff_100%)] p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)] print:hidden sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-3xl">
+                  <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">
+                    <Target className="h-3.5 w-3.5" />
+                    Skill check
+                  </p>
+                  <h3 className="mt-4 text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">
+                    Test Your Understanding
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                    Take a 20-question MCQ assessment generated from this mock paper to discover your strong fields and the topics that need more practice.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openAssessmentModal}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#25671E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1f5719]"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  Start assessment
+                </button>
+              </div>
+            </div>
           </aside>
 
           <section className="space-y-5">
-            <div className="rounded-[2rem] border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)] print:rounded-none print:border-0 print:p-0 print:shadow-none">
+            <div className="rounded-4xl border border-zinc-200 bg-white/90 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)] print:rounded-none print:border-0 print:p-0 print:shadow-none">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">Instructions</p>
@@ -370,7 +411,7 @@ export default function MockPaperResultClient({ generationId }) {
               <article
                 id={section.id}
                 key={section.id}
-                className="rounded-[2rem] border border-zinc-200 bg-white/92 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)] print:break-inside-avoid print:rounded-none print:border print:shadow-none sm:p-7"
+                className="rounded-4xl border border-zinc-200 bg-white/92 p-6 shadow-[0_20px_70px_-34px_rgba(15,23,42,0.28)] print:break-inside-avoid print:rounded-none print:border print:shadow-none sm:p-7"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -459,9 +500,49 @@ export default function MockPaperResultClient({ generationId }) {
                 </div>
               </article>
             ))}
+
           </section>
         </section>
       </main>
+
+      {showAssessmentModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50 px-4 py-6">
+          <div className="w-full max-w-xl rounded-4xl border border-zinc-200 bg-white p-6 shadow-[0_30px_90px_-34px_rgba(15,23,42,0.45)] sm:p-8">
+            <p className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              MCQ assessment
+            </p>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-zinc-900">What this test does</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-700">
+              You will answer 20 MCQs generated from the mock paper you just reviewed. After submission, you will get an exact score percentage plus a topic-wise analysis of strengths and areas to improve.
+            </p>
+
+            <ul className="mt-4 space-y-2 text-sm leading-6 text-zinc-700">
+              <li className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">One question per screen for focused attempts.</li>
+              <li className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">Questions are based on this generated mock paper context.</li>
+              <li className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">You can retake the same set to measure improvement.</li>
+            </ul>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeAssessmentModal}
+                className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={continueToAssessment}
+                className="inline-flex items-center gap-2 rounded-full bg-[#25671E] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1f5719]"
+              >
+                Continue to test
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
+

@@ -52,7 +52,7 @@ export default function Navbar({ coins = 0 }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentHash, setCurrentHash] = useState("");
-  const [liveCoins, setLiveCoins] = useState(coins);
+  const [fetchedCoins, setFetchedCoins] = useState(null);
 
   const mobileShellRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -62,7 +62,7 @@ export default function Navbar({ coins = 0 }) {
   const displayEmail = session?.user?.email || "";
   const displayCoins = Number(
     isAuthenticated
-      ? (typeof liveCoins === "number" ? liveCoins : session?.user?.coins ?? 0)
+      ? (typeof fetchedCoins === "number" ? fetchedCoins : session?.user?.coins ?? 0)
       : (coins ?? 0)
   );
 
@@ -93,7 +93,6 @@ export default function Navbar({ coins = 0 }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setLiveCoins(typeof coins === "number" ? coins : 0);
       return;
     }
 
@@ -115,7 +114,7 @@ export default function Navbar({ coins = 0 }) {
         const nextCoins = data?.data?.coins;
 
         if (active && typeof nextCoins === "number") {
-          setLiveCoins(nextCoins);
+          setFetchedCoins(nextCoins);
         }
       } catch (error) {
         console.error("Failed to load live navbar coins:", error);
@@ -127,7 +126,7 @@ export default function Navbar({ coins = 0 }) {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, coins]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const onResize = () => {
@@ -349,7 +348,7 @@ export default function Navbar({ coins = 0 }) {
                 <>
                   <Link
                     href={loginHref}
-                    className="hidden md:inline-flex rounded-full px-4 py-[7px] text-[13px] font-semibold transition-all duration-150 hover:bg-green-50 active:scale-95 no-underline"
+                    className="hidden md:inline-flex rounded-full px-4 py-1.75 text-[13px] font-semibold transition-all duration-150 hover:bg-green-50 active:scale-95 no-underline"
                     style={{
                       border: "1px solid rgba(37,103,30,0.22)",
                       color: "#25671E",
@@ -360,7 +359,7 @@ export default function Navbar({ coins = 0 }) {
 
                   <Link
                     href={loginHref}
-                    className="hidden md:inline-flex rounded-full px-4 py-[7px] text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95 no-underline"
+                    className="hidden md:inline-flex rounded-full px-4 py-1.75 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95 no-underline"
                     style={{
                       background: "#25671E",
                       boxShadow: "0 2px 10px rgba(37,103,30,0.30)",
@@ -515,7 +514,7 @@ export default function Navbar({ coins = 0 }) {
               {/* Hamburger — mobile only */}
               <button
                 type="button"
-                className="md:hidden flex flex-col justify-center items-center gap-[5px] p-2 rounded-xl transition-all duration-150"
+                className="md:hidden flex flex-col justify-center items-center gap-1.25 p-2 rounded-xl transition-all duration-150"
                 style={{
                   border: "1px solid rgba(37,103,30,0.15)",
                   background: "rgba(37,103,30,0.04)",
@@ -524,7 +523,7 @@ export default function Navbar({ coins = 0 }) {
                 aria-label="Toggle menu"
               >
                 <span
-                  className="block h-0.5 w-[18px] rounded-full transition-all duration-250 origin-center"
+                  className="block h-0.5 w-4.5 rounded-full transition-all duration-250 origin-center"
                   style={{
                     background: "#25671E",
                     transform: mobileOpen
@@ -533,14 +532,14 @@ export default function Navbar({ coins = 0 }) {
                   }}
                 />
                 <span
-                  className="block h-0.5 w-[18px] rounded-full transition-all duration-250"
+                  className="block h-0.5 w-4.5 rounded-full transition-all duration-250"
                   style={{
                     background: "#25671E",
                     opacity: mobileOpen ? 0 : 1,
                   }}
                 />
                 <span
-                  className="block h-0.5 w-[18px] rounded-full transition-all duration-250 origin-center"
+                  className="block h-0.5 w-4.5 rounded-full transition-all duration-250 origin-center"
                   style={{
                     background: "#25671E",
                     transform: mobileOpen

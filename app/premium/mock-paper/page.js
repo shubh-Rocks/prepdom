@@ -136,7 +136,7 @@ export default async function MockPaperPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_12%_18%,rgba(22,163,74,0.14),transparent_36%),radial-gradient(circle_at_84%_14%,rgba(14,165,233,0.14),transparent_30%),linear-gradient(155deg,#f5f7eb_0%,#edfdf7_40%,#eef7ff_100%)] px-5 py-10 sm:px-8">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <section className="overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-white/85 p-6 shadow-[0_24px_90px_-34px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:p-8">
+        <section className="overflow-hidden rounded-4xl border border-zinc-200/80 bg-white/85 p-6 shadow-[0_24px_90px_-34px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700/75">
@@ -163,7 +163,7 @@ export default async function MockPaperPage() {
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.45fr_0.95fr]">
-            <div className="rounded-[1.75rem] border border-zinc-200 bg-zinc-50/90 p-5">
+            <div className="order-2 rounded-[1.75rem] border border-zinc-200 bg-zinc-50/90 p-5 lg:order-2">
               <div className="grid gap-3 sm:grid-cols-3">
                 <article className="rounded-2xl border border-white/80 bg-white p-4 shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">1</p>
@@ -189,7 +189,7 @@ export default async function MockPaperPage() {
               </div>
             </div>
 
-            <aside className="rounded-[1.75rem] border border-zinc-200 bg-zinc-950 p-5 text-white shadow-[0_18px_60px_-30px_rgba(15,23,42,0.65)]">
+            <aside className="order-1 rounded-[1.75rem] border border-zinc-200 bg-zinc-950 p-5 text-white shadow-[0_18px_60px_-30px_rgba(15,23,42,0.65)] lg:order-1">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">
                 <Wand2 className="h-3.5 w-3.5" />
                 Pattern-aware generation

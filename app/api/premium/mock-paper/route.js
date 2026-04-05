@@ -8,6 +8,7 @@ import { APPROVED_PAPER_STATUS } from "@/lib/library/config";
 import { canAccessMockPaper, resolvePlanTierFromUser } from "@/lib/premium/plans";
 import User from "@/lib/models/User";
 import { generateMockPaper } from "@/lib/gemini/generate-mock-paper";
+import MockPaperGeneration from "@/lib/models/MockPaperGeneration";
 import mongoose from "mongoose";
 
 export const runtime = "nodejs";
@@ -152,6 +153,8 @@ export async function POST(request) {
   }
 
   try {
+    const generationId = crypto.randomUUID();
+
     const result = await generateMockPaper({
       sourcePaper: extraction.extractedJson,
       sourcePaperId: String(sourcePaper._id),
@@ -161,9 +164,16 @@ export async function POST(request) {
       formValues: value,
     });
 
+    await MockPaperGeneration.create({
+      generationId,
+      user: session.user.id,
+      sourcePaper: sourcePaper._id,
+      mockPaperJson: result.structured,
+    });
+
     return NextResponse.json({
       ok: true,
-      generationId: crypto.randomUUID(),
+      generationId,
       paper: result.structured,
     });
   } catch (error) {
