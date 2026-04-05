@@ -1,3 +1,34 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Check, Crown, Sparkles, Star } from "lucide-react";
+import { selectPlanAction } from "@/app/actions/premium/plan";
+import { getAuthSession } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/mongodb";
+import User from "@/lib/models/User";
+import {
+  PLAN_DEFINITIONS,
+  PLAN_TIERS,
+  getPlanLabel,
+  hasAllPapersFreeAccess,
+  resolvePlanTierFromUser,
+} from "@/lib/premium/plans";
+
+export const dynamic = "force-dynamic";
+
+const STATUS_MESSAGES = {
+  updated: {
+    tone: "success",
+    text: "Plan updated successfully.",
+  },
+  unchanged: {
+    tone: "neutral",
+    text: "You already have this plan.",
+  },
+  invalid: {
+    tone: "error",
+    text: "Invalid plan selection. Please choose again.",
+  },
+};
 "use client";
 import React, { useState } from "react";
 import Script from "next/script";

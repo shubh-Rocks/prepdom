@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -107,28 +108,46 @@ function FieldSelect({ children, ...props }) {
 }
 
 /** Avatar: shows image preview if avatarUrl is a valid-looking URL, otherwise initials */
-function Avatar({ url, initials }) {
-  const [imgOk, setImgOk] = useState(false);
+function AvatarImage({ url, initials }) {
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    if (!url) { setImgOk(false); return; }
+  if (failed) {
+    return <>{initials || "U"}</>;
+  }
+
+  return (
+    <Image
+      src={url}
+      alt="avatar"
+      fill
+      unoptimized
+      className="object-cover"
+      onError={() => setFailed(true)}
+      sizes="64px"
+    />
+  );
+}
+
+function Avatar({ url, initials }) {
+  const isValidUrl = useMemo(() => {
+    if (!url) {
+      return false;
+    }
+
     try {
-      new URL(url); // throws if invalid
-      setImgOk(true);
+      new URL(url);
+      return true;
     } catch {
-      setImgOk(false);
+      return false;
     }
   }, [url]);
 
   return (
-    <div className="h-16 w-16 overflow-hidden rounded-2xl border-2 border-[#86efac] bg-[#1b6537] text-xl font-black text-white grid place-items-center shrink-0">
-      {imgOk ? (
-        <img
-          src={url}
-          alt="avatar"
-          className="h-full w-full object-cover"
-          onError={() => setImgOk(false)}
-        />
+    <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border-2 border-[#86efac] bg-[#1b6537] text-xl font-black text-white">
+      {isValidUrl ? (
+        <div className="relative h-full w-full">
+          <AvatarImage key={url} url={url} initials={initials} />
+        </div>
       ) : (
         initials || "U"
       )}

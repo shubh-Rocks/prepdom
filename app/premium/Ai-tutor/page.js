@@ -5,6 +5,8 @@ import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import { canAccessAiTutor, resolvePlanTierFromUser } from "@/lib/premium/plans";
 
+export const dynamic = "force-dynamic";
+
 export default async function AiTutorPage() {
   const session = await getAuthSession();
 

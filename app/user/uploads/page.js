@@ -6,6 +6,8 @@ import { getAuthSession } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/mongodb";
 import Paper from "@/lib/models/Paper";
 
+export const dynamic = "force-dynamic";
+
 function formatDate(value) {
   if (!value) {
     return "-";

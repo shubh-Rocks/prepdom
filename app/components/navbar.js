@@ -12,7 +12,6 @@ import {
   Lock,
   LogOut,
   Plus,
-  ShieldCheck,
   Upload,
   UserRound,
   Wallet,
@@ -23,7 +22,7 @@ const BASE_MAIN_LINKS = [
   { label: "My Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
   { label: "Upload", href: "/user/uploads", matchPath: "/user/uploads" },
   { label: "Library", href: "/user/library", matchPath: "/user/library" },
-  { label: "Leaderboard", href: "/leaderboard", hash: "#leaderboard" },
+  { label: "Leaderboard", href: "/user/leaderboard", matchPath: "/user/leaderboard" },
   { label: "Premium", href: "/premium/plan", hash: "#premium" },
 ];
 
@@ -52,6 +51,7 @@ export default function Navbar({ coins = 0 }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentHash, setCurrentHash] = useState("");
+  const [fetchedCoins, setFetchedCoins] = useState(null);
 
   const lastScrollY = useRef(0);
   const mobileShellRef = useRef(null);
@@ -60,28 +60,11 @@ export default function Navbar({ coins = 0 }) {
   const isAuthenticated = status === "authenticated" && Boolean(session?.user);
   const displayName = session?.user?.name || "Prepdom User";
   const displayEmail = session?.user?.email || "";
-  const displayAvatar = session?.user?.image || null;
-  const displayCoins = isAuthenticated
-    ? Math.max(0, Number(session?.user?.coins ?? 0) || 0)
-    : Math.max(0, Number(coins ?? 0) || 0);
-  const isPremiumMember = Boolean(session?.user?.isPremium);
-  const isAdmin = session?.user?.role === "admin";
-
-  const mainLinks = useMemo(() => {
-    if (!isAdmin) return BASE_MAIN_LINKS;
-    return [
-      ...BASE_MAIN_LINKS,
-      { label: "Admin", href: "/admin/papers", matchPath: "/admin/papers" },
-    ];
-  }, [isAdmin]);
-
-  const accountLinks = useMemo(() => {
-    if (!isAdmin) return BASE_ACCOUNT_LINKS;
-    return [
-      { label: "Admin Papers", href: "/admin/papers", icon: ShieldCheck },
-      ...BASE_ACCOUNT_LINKS,
-    ];
-  }, [isAdmin]);
+  const displayCoins = Number(
+    isAuthenticated
+      ? (typeof fetchedCoins === "number" ? fetchedCoins : session?.user?.coins ?? 0)
+      : (coins ?? 0)
+  );
 
   const callbackUrl = useMemo(() => {
     const queryString = searchParams?.toString();
@@ -125,6 +108,43 @@ export default function Navbar({ coins = 0 }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    let active = true;
+
+    async function loadNavbarData() {
+      try {
+        const response = await fetch("/api/user/navbar", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        const nextCoins = data?.data?.coins;
+
+        if (active && typeof nextCoins === "number") {
+          setFetchedCoins(nextCoins);
+        }
+      } catch (error) {
+        console.error("Failed to load live navbar coins:", error);
+      }
+    }
+
+    loadNavbarData();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const onResize = () => {
@@ -259,9 +279,10 @@ export default function Navbar({ coins = 0 }) {
             </nav>
 
             <div className="flex items-center gap-2" ref={mobileShellRef}>
+              {/* Coin pill — visible sm+ */}
               <Link
-                href={coinPillHref}
-                className="hidden cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-150 sm:flex"
+                href="/user/wallet"
+                className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5 py-1 cursor-pointer transition-all duration-150"
                 style={{
                   background: "rgba(255,255,255,0.8)",
                   border: "1px solid rgba(242,181,11,0.45)",
@@ -289,22 +310,29 @@ export default function Navbar({ coins = 0 }) {
                   {displayCoins.toLocaleString()}
                 </span>
                 <span
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                  className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full"
                   style={{
+                    background: "rgba(37,103,30,0.12)",
                     color: "#25671E",
-                    background: "rgba(37,103,30,0.10)",
                   }}
                   aria-hidden="true"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2.6} />
                 </span>
               </Link>
+
+              {status === "loading" ? (
+                <div
+                  className="hidden md:block h-9 w-28 rounded-full animate-pulse"
+                  style={{ background: "rgba(37,103,30,0.10)" }}
+                />
+              ) : null}
 
               {!isAuthenticated && status !== "loading" ? (
                 <>
                   <Link
                     href={loginHref}
-                    className="hidden rounded-full px-4 py-1.75 text-[13px] font-semibold no-underline transition-all duration-150 hover:bg-green-50 active:scale-95 md:inline-flex"
+                    className="hidden md:inline-flex rounded-full px-4 py-1.75 text-[13px] font-semibold transition-all duration-150 hover:bg-green-50 active:scale-95 no-underline"
                     style={{
                       border: "1px solid rgba(37,103,30,0.22)",
                       color: "#25671E",
@@ -314,7 +342,7 @@ export default function Navbar({ coins = 0 }) {
                   </Link>
                   <Link
                     href={loginHref}
-                    className="hidden rounded-full px-4 py-1.75 text-[13px] font-semibold text-white no-underline transition-all duration-200 hover:-translate-y-0.5 active:scale-95 md:inline-flex"
+                    className="hidden md:inline-flex rounded-full px-4 py-1.75 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95 no-underline"
                     style={{
                       background: "#25671E",
                       boxShadow: "0 2px 10px rgba(37,103,30,0.30)",
@@ -459,7 +487,7 @@ export default function Navbar({ coins = 0 }) {
 
               <button
                 type="button"
-                className="flex flex-col items-center justify-center gap-1.25 rounded-xl p-2 transition-all duration-150 md:hidden"
+                className="md:hidden flex flex-col justify-center items-center gap-1.25 p-2 rounded-xl transition-all duration-150"
                 style={{
                   border: "1px solid rgba(37,103,30,0.15)",
                   background: "rgba(37,103,30,0.04)",
@@ -468,7 +496,7 @@ export default function Navbar({ coins = 0 }) {
                 aria-label="Toggle menu"
               >
                 <span
-                  className="block h-0.5 w-4.5 origin-center rounded-full transition-all duration-250"
+                  className="block h-0.5 w-4.5 rounded-full transition-all duration-250 origin-center"
                   style={{
                     background: "#25671E",
                     transform: mobileOpen
@@ -484,7 +512,7 @@ export default function Navbar({ coins = 0 }) {
                   }}
                 />
                 <span
-                  className="block h-0.5 w-4.5 origin-center rounded-full transition-all duration-250"
+                  className="block h-0.5 w-4.5 rounded-full transition-all duration-250 origin-center"
                   style={{
                     background: "#25671E",
                     transform: mobileOpen
